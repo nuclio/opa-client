@@ -15,12 +15,12 @@
 .PHONY: fmt
 fmt: ensure-golangci-linter
 	gofmt -s -w .
-	$(GOPATH)/bin/golangci-lint run --fix
+	$(GOLANGCI_LINT_BIN) run --fix
 
 .PHONY: lint
 lint: modules ensure-golangci-linter
 	@echo Linting...
-	$(GOPATH)/bin/golangci-lint run -v ./...
+	$(GOLANGCI_LINT_BIN) run -v ./...
 	@echo Done.
 
 .PHONY: test
@@ -46,9 +46,10 @@ clean:
 	go clean ./...
 	@echo Done.
 
-GOLANGCI_LINT_VERSION := 2.2.0
-GOLANGCI_LINT_BIN := $(GOPATH)/bin/golangci-lint
-GOLANGCI_LINT_INSTALL_COMMAND := GOBIN=$(GOPATH)/bin go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v$(GOLANGCI_LINT_VERSION)
+GOLANGCI_LINT_VERSION := 2.7.2
+GOLANGCI_LINT_BIN_DIR := ./.bin
+GOLANGCI_LINT_BIN := $(GOLANGCI_LINT_BIN_DIR)/golangci-lint
+GOLANGCI_LINT_INSTALL_COMMAND := curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(GOLANGCI_LINT_BIN_DIR) v$(GOLANGCI_LINT_VERSION)
 
 .PHONY: ensure-golangci-linter
 ensure-golangci-linter:

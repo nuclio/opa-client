@@ -22,21 +22,22 @@ on:
     branches:
     - main
 
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go-version: ['1.23', '1.24']
-    
+
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
-        go-version: ${{ matrix.go-version }}
+        cache: true
+        go-version-file: go.mod
 
     - name: Download dependencies
       run: make modules
@@ -48,14 +49,14 @@ jobs:
       run: make test-coverage
 
     - name: Lint
-      uses: golangci/golangci-lint-action@v8
+      uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9
       with:
-        version: v2.2.0
+        version: v2.7.2
 
     - name: Upload coverage reports
       uses: actions/upload-artifact@v4
       with:
-        name: coverage-reports-go-${{ matrix.go-version }}
+        name: coverage-reports-go
         path: |
           coverage.out
           coverage.html
@@ -72,12 +73,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
-        go-version: '1.23'
+        cache: true
+        go-version-file: go.mod
 
     - name: Run security scan with go vet
       run: |
