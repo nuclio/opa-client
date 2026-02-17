@@ -57,9 +57,10 @@ type Config struct {
 }
 
 type PermissionOptions struct {
-	MemberIds           []string
-	RaiseForbidden      bool
-	OverrideHeaderValue string
+	MemberIds            []string
+	RaiseForbidden       bool
+	OverrideHeaderValue  string
+	SkipLoggingForbidden bool
 }
 
 type PermissionQueryRequestInput struct {
