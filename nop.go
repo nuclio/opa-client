@@ -60,3 +60,12 @@ func (c *NopClient) QueryPermissions(ctx context.Context, resource string, actio
 	}
 	return true, nil
 }
+
+func (c *NopClient) QueryAllowedProjects(ctx context.Context, permissionOptions *PermissionOptions) ([]string, error) {
+	if c.verbose {
+		c.logger.InfoWithCtx(ctx,
+			"Skipping allowed-projects query",
+			"permissionOptions", permissionOptions)
+	}
+	return []string{"*"}, nil
+}

@@ -32,6 +32,7 @@ func CreateOpaClient(parentLogger logger.Logger, opaConfiguration *Config) Clien
 			opaConfiguration.Address,
 			opaConfiguration.PermissionQueryPath,
 			opaConfiguration.PermissionFilterPath,
+			opaConfiguration.AllowedProjectsQueryPath,
 			time.Duration(opaConfiguration.RequestTimeout)*time.Second,
 			opaConfiguration.Verbose,
 			opaConfiguration.OverrideHeaderValue,

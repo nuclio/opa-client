@@ -42,3 +42,9 @@ func (mc *MockClient) QueryPermissionsMultiResources(ctx context.Context,
 	args := mc.Called(ctx, resources, action, permissionOptions)
 	return args.Get(0).([]bool), args.Error(1)
 }
+
+func (mc *MockClient) QueryAllowedProjects(ctx context.Context,
+	permissionOptions *PermissionOptions) ([]string, error) {
+	args := mc.Called(ctx, permissionOptions)
+	return args.Get(0).([]string), args.Error(1)
+}
