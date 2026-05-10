@@ -33,13 +33,14 @@ import (
 
 func main() {
     // Create configuration
-    config := &opa.Config{ 
-        ClientKind:           opa.ClientKindHTTP,
-        Address:              "http://localhost:8181",
-        PermissionQueryPath:  "/v1/data/authz/allow",
-        PermissionFilterPath: "/v1/data/authz/filter_allowed",
-        RequestTimeout:       10,
-        Verbose:              false,
+    config := &opa.Config{
+        ClientKind:               opa.ClientKindHTTP,
+        Address:                  "http://localhost:8181",
+        PermissionQueryPath:      "/v1/data/authz/allow",
+        PermissionFilterPath:     "/v1/data/authz/filter_allowed",
+        AllowedProjectsQueryPath: "/v1/data/authz/allowed_projects",
+        RequestTimeout:           10,
+        Verbose:                  false,
     }
     
     // Create client
@@ -64,6 +65,15 @@ func main() {
             MemberIds: []string{"user123"},
         },
     )
+
+    // Query allowed projects
+    projects, err := client.QueryAllowedProjects(
+        context.Background(),
+        &opa.PermissionOptions{
+            MemberIds: []string{"user123", "group456"},
+        },
+    )
+    // projects may be ["*"] (all projects) or a list of concrete project names
 }
 ```
 
@@ -75,6 +85,7 @@ func main() {
 | `Address` | `string` | OPA server URL | - |
 | `PermissionQueryPath` | `string` | Single permission query endpoint | - |
 | `PermissionFilterPath` | `string` | Multi-resource query endpoint | - |
+| `AllowedProjectsQueryPath` | `string` | Allowed-projects query endpoint | - |
 | `RequestTimeout` | `int` | HTTP timeout in seconds | 10 |
 | `Verbose` | `bool` | Enable verbose logging | `false` |
 | `OverrideHeaderValue` | `string` | Value for bypass functionality | - |

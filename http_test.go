@@ -33,10 +33,11 @@ import (
 
 type HTTPClientTestSuite struct {
 	suite.Suite
-	logger         logger.Logger
-	ctx            context.Context
-	testHTTPServer *httptest.Server
-	httpClient     *HTTPClient
+	logger                      logger.Logger
+	ctx                         context.Context
+	testHTTPServer              *httptest.Server
+	httpClient                  *HTTPClient
+	allowedProjectsRequestCount int
 }
 
 func (suite *HTTPClientTestSuite) SetupTest() {
@@ -45,9 +46,11 @@ func (suite *HTTPClientTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 
 	suite.ctx = context.Background()
+	suite.allowedProjectsRequestCount = 0
 
 	allowPath := "/v1/data/authz/allow"
 	filterPath := "/v1/data/authz/filter_allowed"
+	allowedProjectsPath := "/v1/data/platform/authz/allowed_projects"
 
 	// Create test HTTP server
 	suite.testHTTPServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -86,6 +89,20 @@ func (suite *HTTPClientTestSuite) SetupTest() {
 			w.Header().Set("Content-Type", "application/json")
 			err = json.NewEncoder(w).Encode(permissionResponse)
 			suite.Require().NoError(err)
+
+		case allowedProjectsPath:
+			suite.allowedProjectsRequestCount++
+
+			var allowedProjectsRequest AllowedProjectsRequest
+			err := json.NewDecoder(r.Body).Decode(&allowedProjectsRequest)
+			suite.Require().NoError(err)
+
+			result := computeAllowedProjects(allowedProjectsRequest.Input.Ids)
+
+			response := AllowedProjectsResponse{Result: result}
+			w.Header().Set("Content-Type", "application/json")
+			err = json.NewEncoder(w).Encode(response)
+			suite.Require().NoError(err)
 		}
 	}))
 
@@ -95,6 +112,7 @@ func (suite *HTTPClientTestSuite) SetupTest() {
 		suite.testHTTPServer.URL,
 		allowPath,
 		filterPath,
+		allowedProjectsPath,
 		5*time.Second,
 		true, // Enable verbose logging for tests
 		"test-override-value",
@@ -201,6 +219,98 @@ func (suite *HTTPClientTestSuite) TestQueryPermissionsMultiResources_WithOverrid
 	suite.Require().True(permissions[1])
 	suite.Require().True(permissions[2])
 	suite.Require().True(permissions[3])
+}
+
+func (suite *HTTPClientTestSuite) TestQueryAllowedProjects_Wildcard() {
+	projects, err := suite.httpClient.QueryAllowedProjects(
+		suite.ctx,
+		&PermissionOptions{
+			MemberIds: []string{"admin"},
+		},
+	)
+
+	suite.Require().NoError(err)
+	suite.Require().Equal([]string{"*"}, projects)
+}
+
+func (suite *HTTPClientTestSuite) TestQueryAllowedProjects_ConcreteProjects() {
+	projects, err := suite.httpClient.QueryAllowedProjects(
+		suite.ctx,
+		&PermissionOptions{
+			MemberIds: []string{"read-only-user", "reader-group"},
+		},
+	)
+
+	suite.Require().NoError(err)
+	suite.Require().ElementsMatch([]string{"abc", "def"}, projects)
+}
+
+func (suite *HTTPClientTestSuite) TestQueryAllowedProjects_NoProjects() {
+	projects, err := suite.httpClient.QueryAllowedProjects(
+		suite.ctx,
+		&PermissionOptions{
+			MemberIds: []string{"unknown-user"},
+		},
+	)
+
+	suite.Require().NoError(err)
+	suite.Require().Empty(projects)
+}
+
+func (suite *HTTPClientTestSuite) TestQueryAllowedProjects_WithOverride() {
+	projects, err := suite.httpClient.QueryAllowedProjects(
+		suite.ctx,
+		&PermissionOptions{
+			MemberIds:           []string{"unknown-user"}, // would normally yield empty
+			OverrideHeaderValue: "test-override-value",
+		},
+	)
+
+	suite.Require().NoError(err)
+	suite.Require().Equal([]string{"*"}, projects)
+	suite.Require().Equal(0, suite.allowedProjectsRequestCount,
+		"server must not be hit when override matches")
+}
+
+func (suite *HTTPClientTestSuite) TestQueryAllowedProjects_EmptyIds() {
+	projects, err := suite.httpClient.QueryAllowedProjects(
+		suite.ctx,
+		&PermissionOptions{
+			MemberIds: []string{},
+		},
+	)
+
+	suite.Require().NoError(err)
+	suite.Require().Empty(projects)
+}
+
+// computeAllowedProjects is a test helper that emulates the allowed_projects.rego
+// rule. It returns ["*"] if any id is "admin" or "wildcard-user"; otherwise it
+// returns the union of concrete project names from the fixture map below.
+func computeAllowedProjects(ids []string) []string {
+	for _, id := range ids {
+		if id == "admin" || id == "wildcard-user" {
+			return []string{"*"}
+		}
+	}
+
+	fixture := map[string][]string{
+		"read-only-user": {"abc"},
+		"reader-group":   {"def"},
+	}
+
+	seen := make(map[string]struct{})
+	var result []string
+	for _, id := range ids {
+		for _, name := range fixture[id] {
+			if _, ok := seen[name]; ok {
+				continue
+			}
+			seen[name] = struct{}{}
+			result = append(result, name)
+		}
+	}
+	return result
 }
 
 func TestHTTPClientTestSuite(t *testing.T) {

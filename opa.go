@@ -48,4 +48,10 @@ type Client interface {
 	// QueryPermissionsMultiResources queries permissions for multiple resources at once.
 	// Returns a slice of booleans where each index corresponds to the resource at the same index.
 	QueryPermissionsMultiResources(context.Context, []string, Action, *PermissionOptions) ([]bool, error)
+
+	// QueryAllowedProjects returns the set of project names the caller (identified by
+	// PermissionOptions.MemberIds) is allowed to read or list. A returned slice
+	// containing "*" signals that all projects are accessible — callers are responsible
+	// for treating "*" as a wildcard; no concrete names are returned alongside it.
+	QueryAllowedProjects(context.Context, *PermissionOptions) ([]string, error)
 }

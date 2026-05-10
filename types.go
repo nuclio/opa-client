@@ -46,6 +46,9 @@ type Config struct {
 	// the path used when querying multiple resources against opa server (e.g.: /v1/data/somewhere/authz/filter_allowed)
 	PermissionFilterPath string `json:"permissionFilterPath,omitempty"`
 
+	// the path used when querying allowed projects against opa server (e.g.: /v1/data/platform/authz/allowed_projects)
+	AllowedProjectsQueryPath string `json:"allowedProjectsQueryPath,omitempty"`
+
 	// for extra verbosity
 	Verbose bool `json:"verbose,omitempty"`
 
@@ -88,6 +91,18 @@ type PermissionQueryResponse struct {
 }
 
 type PermissionFilterResponse struct {
+	Result []string `json:"result,omitempty"`
+}
+
+type AllowedProjectsRequestInput struct {
+	Ids []string `json:"ids,omitempty"`
+}
+
+type AllowedProjectsRequest struct {
+	Input AllowedProjectsRequestInput `json:"input,omitempty"`
+}
+
+type AllowedProjectsResponse struct {
 	Result []string `json:"result,omitempty"`
 }
 
