@@ -112,7 +112,7 @@ func (c *HTTPClient) QueryPermissionsMultiResources(ctx context.Context,
 
 	var response PermissionFilterResponse
 	if err := c.doRequest(ctx, c.permissionFilterPath, request, &response); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Failed to do query permissions multi resources HTTP request")
 	}
 
 	if c.verbose {
@@ -146,7 +146,7 @@ func (c *HTTPClient) QueryPermissions(ctx context.Context,
 
 	var response PermissionQueryResponse
 	if err := c.doRequest(ctx, c.permissionQueryPath, request, &response); err != nil {
-		return false, err
+		return false, errors.Wrap(err, "Failed to do query permissions HTTP request")
 	}
 
 	if c.verbose {
@@ -174,7 +174,7 @@ func (c *HTTPClient) QueryAllowedProjects(ctx context.Context,
 
 	var response AllowedProjectsResponse
 	if err := c.doRequest(ctx, c.allowedProjectsQueryPath, request, &response); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Failed to do query allowed projects HTTP request")
 	}
 
 	if c.verbose {
