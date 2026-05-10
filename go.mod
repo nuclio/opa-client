@@ -1,6 +1,6 @@
 module github.com/nuclio/opa-client
 
-go 1.25.5
+go 1.26.3
 
 require (
 	github.com/nuclio/errors v0.0.4

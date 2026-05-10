@@ -46,7 +46,7 @@ clean:
 	go clean ./...
 	@echo Done.
 
-GOLANGCI_LINT_VERSION := 2.7.2
+GOLANGCI_LINT_VERSION := 2.12.1
 GOLANGCI_LINT_BIN_DIR := ./.bin
 GOLANGCI_LINT_BIN := $(GOLANGCI_LINT_BIN_DIR)/golangci-lint
 GOLANGCI_LINT_INSTALL_COMMAND := curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(GOLANGCI_LINT_BIN_DIR) v$(GOLANGCI_LINT_VERSION)
